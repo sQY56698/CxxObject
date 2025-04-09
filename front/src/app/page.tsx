@@ -1,103 +1,131 @@
-import Image from "next/image";
+import { Navbar } from "@/components/layout/navbar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // 模拟热门悬赏数据
+  const hotTasks = [
+    {
+      id: 1,
+      title: "寻找2024年最新的机器学习资料",
+      reward: 500,
+      deadline: "2024-04-20",
+      category: "教育资源",
+    },
+    {
+      id: 2,
+      title: "需要完整版Adobe系列软件合集",
+      reward: 300,
+      deadline: "2024-04-15",
+      category: "软件资源",
+    },
+    {
+      id: 3,
+      title: "收集各大高校考研真题资料",
+      reward: 800,
+      deadline: "2024-04-25",
+      category: "教育资源",
+    },
+  ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <main className="min-h-screen bg-background">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="py-20 text-center bg-gradient-to-b from-primary/10 to-background">
+        <div className="container">
+          <h1 className="text-4xl font-bold mb-6">
+            文件资源共享与悬赏平台
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8">
+            快速找到你需要的文件，或通过悬赏获得帮助
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link href="/tasks">
+              <Button size="lg">
+                浏览悬赏
+              </Button>
+            </Link>
+            <Link href="/upload">
+              <Button size="lg" variant="outline">
+                发布悬赏
+              </Button>
+            </Link>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </section>
+
+      {/* Hot Tasks Section */}
+      <section className="py-16">
+        <div className="container">
+          <h2 className="text-2xl font-bold mb-8">热门悬赏</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hotTasks.map((task) => (
+              <Card key={task.id}>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">{task.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        类别：{task.category}
+                      </p>
+                    </div>
+                    <div className="text-primary font-bold">
+                      ¥{task.reward}
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      截止日期：{task.deadline}
+                    </span>
+                    <Button variant="outline" size="sm">
+                      查看详情
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link href="/tasks">
+              <Button variant="outline">
+                查看更多悬赏
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-muted/50">
+        <div className="container">
+          <h2 className="text-2xl font-bold mb-12 text-center">
+            平台特色
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <h3 className="font-semibold mb-4">安全可靠</h3>
+              <p className="text-muted-foreground">
+                文件经过安全检查，支付交易有保障
+              </p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold mb-4">快速响应</h3>
+              <p className="text-muted-foreground">
+                海量用户在线，迅速获得资源
+              </p>
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold mb-4">分类完善</h3>
+              <p className="text-muted-foreground">
+                资源分类详细，轻松找到所需
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
