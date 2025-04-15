@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useFloating, offset, flip, shift, arrow, autoUpdate } from '@floating-ui/react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { useUserStore } from '@/lib/store/user-store';
 import { profileApi } from '@/lib/api/profile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/utils';
+import Link from 'next/link';
 
 // 合并用户资料信息
 interface UserInfoPanelData {
@@ -56,6 +58,8 @@ export function UserInfoPanel({ userId, children, className }: UserInfoPanelProp
     whileElementsMounted: autoUpdate,
   });
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       if (!userId || !isOpen) return;
@@ -86,6 +90,10 @@ export function UserInfoPanel({ userId, children, className }: UserInfoPanelProp
       fetchUserInfo();
     }
   }, [userId, isOpen]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleMouseEnter = () => {
     if (hideTimeout.current) {
@@ -133,14 +141,17 @@ export function UserInfoPanel({ userId, children, className }: UserInfoPanelProp
       >
         {children}
       </div>
-      {isOpen && (
+      {mounted && isOpen && createPortal(
         <div
           ref={refs.setFloating}
-          style={floatingStyles}
+          style={{
+            ...floatingStyles,
+            zIndex: 1000, // 确保面板显示在其他内容之上
+          }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           className={cn(
-            "z-50 w-80 rounded-lg border bg-card p-4 shadow-lg",
+            "fixed w-80 rounded-lg border bg-card p-4 shadow-lg",
           )}
         >
           <div
@@ -149,6 +160,7 @@ export function UserInfoPanel({ userId, children, className }: UserInfoPanelProp
             style={{
               left: arrowX != null ? `${arrowX}px` : '',
               top: arrowY != null ? `${arrowY}px` : '',
+              zIndex: -1, // 确保箭头在面板内容下方
             }}
           />
           
@@ -242,18 +254,22 @@ export function UserInfoPanel({ userId, children, className }: UserInfoPanelProp
                 </div>
               )}
 
-              {/* 操作按钮 - 移除关注功能 */}
+              {/* 操作按钮 - 改为链接形式 */}
               {!isCurrentUser && (
                 <div className="mt-4 flex gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
+                  <Link 
+                    href={`/messages/private/${userInfo.userId}`}
                     className="flex-1"
-                    onClick={() => {/* 发送消息逻辑 */}}
                   >
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    发消息
-                  </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      发消息
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -262,7 +278,8 @@ export function UserInfoPanel({ userId, children, className }: UserInfoPanelProp
               用户信息加载失败
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

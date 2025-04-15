@@ -367,7 +367,6 @@ export default function Home() {
             <div className="space-y-6 pt-6">
               {/* 发布悬赏卡片 */}
               <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-primary/90 to-primary group">
-                <div className="absolute inset-0 bg-[linear-gradient(40deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] opacity-50 group-hover:opacity-100 transition-opacity" />
                 <CardContent className="p-6 text-white space-y-4">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
