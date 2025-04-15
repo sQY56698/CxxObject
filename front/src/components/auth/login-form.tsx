@@ -2,14 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import * as z from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useUserStore } from "@/lib/store/user-store";
 
 const loginSchema = z.object({
-  email: z.string().email({
-    message: "请输入有效的邮箱地址",
+  username: z.string().min(1, {
+    message: "请输入用户名",
   }),
   password: z.string().min(6, {
     message: "密码至少需要6个字符",
@@ -17,17 +20,25 @@ const loginSchema = z.object({
 });
 
 export function LoginForm() {
+  const router = useRouter();
+  const { login, isLoading } = useUserStore();
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    // TODO: 实现登录逻辑
-    console.log(values);
+    try {
+      await login(values.username, values.password);
+      toast.success("登录成功");
+      router.push("/"); // 登录成功后重定向到首页
+    } catch (error) {
+      // 错误已经被axios拦截器处理
+    }
   }
 
   return (
@@ -35,12 +46,12 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="email"
+          name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>邮箱</FormLabel>
+              <FormLabel>用户名</FormLabel>
               <FormControl>
-                <Input placeholder="请输入邮箱" {...field} />
+                <Input placeholder="请输入用户名" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -59,8 +70,8 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          登录
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "登录中..." : "登录"}
         </Button>
       </form>
     </Form>

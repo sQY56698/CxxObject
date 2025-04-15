@@ -1,6 +1,97 @@
 server:
   port: 9090
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        timeout: 30m
+
+
+# 文件上传配置
+file:
+  upload:
+    base-dir: ${user.dir}/uploads/files
+    tus-temp-dir: ${user.dir}/uploads/tus-temp
+    max-size: 10737418240  # 10GB
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    root: DEBUG
+
+app:
+  upload:
+    url-prefix: /uploads
+    base-dir: ${user.dir}${app.upload.url-prefix}
+    chunk-folder: ${app.upload.base-dir}/chunks
+    chunk:
+      max-chunk-size: 1048576  # 1MB
+      expiration-hours: 24
+    large-file:
+      max-size: 10737418240  # 10GB
+      min-size: 1     # 1B
+      forbidden-types:
+        - application/x-msdownload
+        - application/x-executable
+        - application/x-dosexec
+        - application/x-msdos-program
+      forbidden-extensions:
+        - exe
+        - dll
+        - bat
+        - cmd
+        - sh
+        - msi
+        - com
+        - scr
+        - vbs
+        - ps1
+    types:
+      avatar:
+        allowed-types: 
+          - image/jpeg
+          - image/png
+          - image/gif
+        max-size: 2097152  # 2MB in bytes
+        directory: avatars
+        dimensions:
+          width: 1000
+          height: 1000
+          min-width: 100
+          min-height: 100
+  jwt:
+    secret: yourSecretKeyNeedsToBeLongEnoughForHS256AtLeast32Chars
+    expiration: 86400000
+  captcha:
+    text-length: 4
+    font-names: Arial,Courier
+    width: 120
+    height: 40
+    font-size: 30
+    text-color: black
+    background-from: white
+    background-to: white
+    no-noise: true
 
 spring:
   application:
     name: cxx
+  servlet:
+    multipart:
+      enabled: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/file_bounty?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: flowerwine
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  security:
+    filter:
+      order: 10
