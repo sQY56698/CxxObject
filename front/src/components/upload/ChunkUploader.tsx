@@ -279,7 +279,7 @@ export default function ChunkUploader({
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="space-y-4">
       {/* 拖放区域 */}
       <div
         className={cn(
@@ -319,7 +319,7 @@ export default function ChunkUploader({
               <Card key={file.id} className="p-4">
                 <div className="flex items-center gap-4">
                   <FileIcon className="h-8 w-8 flex-shrink-0 text-gray-400" />
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium truncate">
                         {file.name}
