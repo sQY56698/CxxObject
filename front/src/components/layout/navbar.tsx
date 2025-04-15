@@ -10,7 +10,7 @@ import { useUserStore } from "@/lib/store/user-store";
 import { usePointsStore } from '@/lib/store/points-store';
 import { useMessageStore } from '@/lib/store/message-store';
 import { useWebSocket } from '@/providers/WebSocketProvider';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -22,8 +22,8 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import HomeSignButton from "@/components/sign/HomeSignButton";
+import { SearchResultPanel } from "@/components/search/SearchResultPanel";
 
 export function Navbar() {
   const router = useRouter();
@@ -31,20 +31,9 @@ export function Navbar() {
   const { points, fetchPoints } = usePointsStore();
   const { totalUnreadCount, fetchUnreadCounts } = useMessageStore();
   const { addMessageHandler, removeMessageHandler } = useWebSocket();
-  const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("");
-
-  // 处理客户端渲染
-  useEffect(() => {
-    setMounted(true);
-    
-    // 根据当前路径设置活动标签
-    const path = window.location.pathname;
-    if (path.includes("/tasks")) setActiveTab("tasks");
-    else if (path.includes("/upload")) setActiveTab("upload");
-    else if (path.includes("/downloads")) setActiveTab("downloads");
-    else if (path === "/") setActiveTab("home");
-  }, []);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // 监听用户登录状态变化，更新积分信息
   useEffect(() => {
@@ -105,36 +94,6 @@ export function Navbar() {
     return username.charAt(0).toUpperCase();
   };
 
-  // 客户端渲染前的返回
-  if (!mounted) {
-    return (
-      <nav className="fixed top-0 left-0 right-0 border-b bg-background z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo 区域 */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <Image
-                src="/logo.png"
-                alt="文件悬赏"
-                width={36}
-                height={36}
-                className="rounded-lg"
-                priority
-              />
-              <span className="text-lg font-bold">文件悬赏</span>
-            </Link>
-          </div>
-          
-          {/* 右侧占位 */}
-          <div className="flex items-center space-x-4">
-            <div className="w-[300px] h-10"></div>
-            <div className="w-[100px]"></div>
-          </div>
-        </div>
-      </nav>
-    );
-  }
-
   // 主要渲染
   return (
     <nav className="fixed top-0 left-0 right-0 border-b bg-background z-50">
@@ -144,7 +103,6 @@ export function Navbar() {
           <Link
             href="/"
             className="flex items-center space-x-2"
-            onClick={() => setActiveTab("home")}
           >
             <Image
               src="/logo.png"
@@ -162,11 +120,32 @@ export function Navbar() {
           {/* 搜索框 */}
           <div className="relative hidden md:flex items-center">
             <Input
+              ref={searchInputRef}
               type="search"
-              placeholder="搜索文件或悬赏..."
-              className="w-[280px] h-9 rounded-full pl-9 pr-4 border-muted bg-muted/40 focus-visible:bg-background focus-visible:ring-offset-0"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onFocus={() => setIsSearchOpen(true)}
+              placeholder="搜索悬赏..."
+              className="w-[280px] h-9 rounded-full pl-9 pr-4 border-muted bg-muted/40 
+                focus-visible:bg-background focus-visible:ring-offset-0"
             />
             <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            
+            {/* 添加搜索结果面板 */}
+            <SearchResultPanel
+              keyword={searchKeyword}
+              isOpen={isSearchOpen}
+              onClose={() => setIsSearchOpen(false)}
+              anchorRect={searchInputRef.current?.getBoundingClientRect()}
+            />
+
+            {/* 添加点击其他区域关闭搜索面板 */}
+            {isSearchOpen && (
+              <div 
+                className="fixed inset-0 z-40"
+                onClick={() => setIsSearchOpen(false)}
+              />
+            )}
           </div>
 
           {isLoggedIn ? (

@@ -220,4 +220,16 @@ public class BountyController {
         List<FileBountyDTO> bounties = bountyService.getHotBounties(authUser.getId());
         return ResponseEntity.ok(bounties);
     }
+
+    /**
+     * 搜索悬赏
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<FileBountyDTO>> searchBounties(
+            @RequestParam String keyword,
+            @CurrentUser AuthUser authUser
+    ) {
+        List<FileBountyDTO> bounties = bountyService.searchBounties(keyword, authUser.getId());
+        return ResponseEntity.ok(bounties);
+    }
 }

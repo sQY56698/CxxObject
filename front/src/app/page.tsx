@@ -391,8 +391,8 @@ export default function Home() {
               </Card>
 
               {/* 热门悬赏 - 新设计 */}
-              <Card className="border shadow-sm hover:shadow-md transition-all overflow-hidden py-0">
-                <CardHeader className="bg-gradient-to-r from-red-50 to-amber-50/50 border-b py-4">
+              <Card className="border shadow-sm hover:shadow-md transition-all overflow-hidden py-0 gap-0">
+                <CardHeader className="bg-gradient-to-r from-red-50 to-amber-50/50 border-b py-4 gap-0">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <div className="p-1.5 bg-gradient-to-br from-red-100 to-amber-100 rounded-lg">
                       <TrendingUp className="h-5 w-5 text-red-500" />

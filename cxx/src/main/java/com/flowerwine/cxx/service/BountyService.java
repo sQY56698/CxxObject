@@ -597,4 +597,28 @@ public class BountyService {
                 .map(bounty -> convertToDTO(bounty, currentUserId))
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 搜索悬赏
+     */
+    public List<FileBountyDTO> searchBounties(String keyword, Long currentUserId) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        
+        // 创建分页请求，限制返回前10条结果
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        
+        // 在标题和描述中搜索关键词
+        Page<FileBounty> bountyPage = fileBountyRepository
+            .findByTitleContainingOrDescriptionContaining(
+                keyword.trim(), 
+                keyword.trim(), 
+                pageable
+            );
+        
+        return bountyPage.getContent().stream()
+            .map(bounty -> convertToDTO(bounty, currentUserId))
+            .collect(Collectors.toList());
+    }
 }

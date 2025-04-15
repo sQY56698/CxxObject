@@ -126,4 +126,10 @@ export const bountyApi = {
     const response = await apiClient.get<FileBounty[]>('/bounty/hot');
     return response.data;
   },
+
+  // 搜索悬赏
+  searchBounties: async (keyword: string): Promise<FileBounty[]> => {
+    const response = await apiClient.get<FileBounty[]>(`/bounty/search?keyword=${encodeURIComponent(keyword)}`);
+    return response.data;
+  },
 }; 
