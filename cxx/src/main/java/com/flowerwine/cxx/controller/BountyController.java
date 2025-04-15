@@ -204,12 +204,20 @@ public class BountyController {
     }
 
     /**
-     * 获取最新的N个悬赏（用于首页轮播）
+     * 获取最新的进行中悬赏（用于首页轮播）
      */
     @GetMapping("/latest")
     public ResponseEntity<List<FileBountyDTO>> getLatestBounties(@CurrentUser AuthUser authUser) {
-        
         List<FileBountyDTO> bounties = bountyService.getLatestBounties(authUser.getId());
+        return ResponseEntity.ok(bounties);
+    }
+
+    /**
+     * 获取热门悬赏
+     */
+    @GetMapping("/hot")
+    public ResponseEntity<List<FileBountyDTO>> getHotBounties(@CurrentUser AuthUser authUser) {
+        List<FileBountyDTO> bounties = bountyService.getHotBounties(authUser.getId());
         return ResponseEntity.ok(bounties);
     }
 }

@@ -148,7 +148,7 @@ export default function BountyDetail() {
       setMyBidId(null);
       await loadBountyDetail();
       fetchPoints();
-    } catch (error) {
+    } catch (error: any) {
       console.error("退出竞标失败:", error);
       toast.error(error.message);
     } finally {
@@ -163,7 +163,7 @@ export default function BountyDetail() {
       toast.success("悬赏已重新开启");
       loadBountyDetail();
       fetchPoints();
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.response?.data?.message || "重新开启悬赏失败");
       console.error(error);
     } finally {

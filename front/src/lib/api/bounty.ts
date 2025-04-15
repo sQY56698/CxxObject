@@ -115,11 +115,15 @@ export const bountyApi = {
     return response.data;
   },
 
-  // 获取最新的N个悬赏（用于首页轮播）
+  // 获取最新的进行中悬赏（用于首页轮播）
   getLatestBounties: async () => {
-    const response = await apiClient.get<FileBounty[]>(
-      `/bounty/latest`
-    );
+    const response = await apiClient.get<FileBounty[]>('/bounty/latest');
+    return response.data;
+  },
+
+  // 获取热门悬赏
+  getHotBounties: async () => {
+    const response = await apiClient.get<FileBounty[]>('/bounty/hot');
     return response.data;
   },
 }; 

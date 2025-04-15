@@ -27,10 +27,13 @@ import { toast } from "sonner";
 import useEmblaCarousel from 'embla-carousel-react';
 import AutoPlay from 'embla-carousel-autoplay';
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export default function Home() {
   const [latestBounties, setLatestBounties] = useState<FileBounty[]>([]);
+  const [hotBounties, setHotBounties] = useState<FileBounty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHotLoading, setIsHotLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
   
   // Embla Carousel 设置
@@ -83,6 +86,24 @@ export default function Home() {
     loadLatestBounties();
   }, []);
 
+  // 获取热门悬赏数据
+  useEffect(() => {
+    const loadHotBounties = async () => {
+      try {
+        setIsHotLoading(true);
+        const data = await bountyApi.getHotBounties();
+        setHotBounties(data);
+      } catch (error) {
+        console.error("加载热门悬赏失败:", error);
+        toast.error("加载热门悬赏失败");
+      } finally {
+        setIsHotLoading(false);
+      }
+    };
+
+    loadHotBounties();
+  }, []);
+
   // 获取状态样式
   const getStatusStyle = (status: number) => {
     switch (status) {
@@ -117,45 +138,6 @@ export default function Home() {
     }
   };
 
-  // 模拟热门悬赏数据
-  const hotTasks = [
-    {
-      id: 1,
-      title: "寻找2024年最新的机器学习资料",
-      reward: 500,
-      deadline: "2024-04-20",
-      category: "教育资源",
-    },
-    {
-      id: 2,
-      title: "需要完整版Adobe系列软件合集",
-      reward: 300,
-      deadline: "2024-04-15",
-      category: "软件资源",
-    },
-    {
-      id: 3,
-      title: "收集各大高校考研真题资料",
-      reward: 800,
-      deadline: "2024-04-25",
-      category: "教育资源",
-    },
-  ];
-
-  // 模拟推荐悬赏数据
-  const recommendedTasks = [
-    {
-      id: 4,
-      title: "Python数据分析实战教程",
-      reward: 400,
-    },
-    {
-      id: 5,
-      title: "前端开发学习资料合集",
-      reward: 350,
-    },
-  ];
-
   return (
     <main className="min-h-screen bg-background">
 
@@ -171,7 +153,7 @@ export default function Home() {
                   <h2 className="text-xl md:text-2xl font-bold flex items-center">
                     <span className="bg-primary/10 p-1.5 rounded-md mr-2">
                       <TrendingUp className="h-5 w-5 text-primary" />
-                    </span>
+                          </span>
                     最新悬赏
                   </h2>
                   
@@ -193,8 +175,8 @@ export default function Home() {
                         onClick={scrollNext}
                       >
                         <ChevronRight className="h-5 w-5" />
-                      </Button>
-                    </div>
+                          </Button>
+                        </div>
                   )}
                 </div>
 
@@ -206,10 +188,10 @@ export default function Home() {
                           <Skeleton className="h-6 w-3/4" />
                           <Skeleton className="h-4 w-1/2" />
                           <Skeleton className="h-24 w-full" />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
                 ) : latestBounties.length > 0 ? (
                   <div className="relative">
                     <div className="overflow-hidden" ref={emblaRef}>
@@ -218,34 +200,54 @@ export default function Home() {
                           const statusStyle = getStatusStyle(bounty.status);
                           
                           return (
-                            <div key={bounty.id} 
+                            <div
+                              key={bounty.id}
                               className="flex-[0_0_100%] min-w-0 px-4 
                                 md:flex-[0_0_50%] lg:flex-[0_0_50%]"
                             >
-                              <Link href={`/bounty/${bounty.id}`} className="block h-full">
-                                <Card className="overflow-hidden border shadow-sm hover:shadow-lg 
+                              <Link
+                                href={`/bounty/${bounty.id}`}
+                                className="block h-full"
+                              >
+                                <Card
+                                  className="overflow-hidden border shadow-sm hover:shadow-lg 
                                   transition-all hover:border-primary/20 h-full flex flex-col 
                                   group bg-gradient-to-b from-white to-muted/5 mx-auto"
                                 >
                                   <div className="relative p-5 pb-3 flex flex-col h-full">
-                                    {/* 状态标签和积分显示 */}
+                                    {/* 顶部信息：状态标签、积分和用户信息 */}
                                     <div className="flex justify-between items-start mb-3">
-                                      {/* 状态标签 */}
-                                      <div
-                                        className={cn(
-                                          "px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5",
-                                          "shadow-sm border border-opacity-10",
-                                          "transition-transform group-hover:scale-105",
-                                          statusStyle.bg,
-                                          statusStyle.text
-                                        )}
-                                      >
-                                        {statusStyle.icon}
-                                        {statusStyle.label}
+                                      <div className="flex items-center gap-2">
+                                        {/* 状态标签 */}
+                                        <div
+                                          className={cn(
+                                            "px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5",
+                                            "shadow-sm border border-opacity-10",
+                                            "transition-transform group-hover:scale-105",
+                                            statusStyle.bg,
+                                            statusStyle.text
+                                          )}
+                                        >
+                                          {statusStyle.icon}
+                                          {statusStyle.label}
+                                        </div>
+                                        {/* 用户头像和名称 */}
+                                        <div className="flex items-center gap-2">
+                                          <UserAvatar
+                                            userId={bounty.userId}
+                                            username={bounty.username}
+                                            avatar={bounty.avatar}
+                                            size="sm"
+                                          />
+                                          <span className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                                            {bounty.username}
+                                          </span>
+                                        </div>
                                       </div>
-                                      
+
                                       {/* 积分显示 */}
-                                      <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-amber-100/50 
+                                      <div
+                                        className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-amber-100/50 
                                         px-3 py-1 rounded-full border border-amber-200/30 shadow-sm
                                         transition-transform group-hover:scale-105"
                                       >
@@ -260,7 +262,9 @@ export default function Home() {
 
                                     {/* 标题 */}
                                     <div className="text-lg font-semibold leading-tight mb-2 group-hover:text-primary transition-colors">
-                                      <div className="line-clamp-2">{bounty.title}</div>
+                                      <div className="line-clamp-2">
+                                        {bounty.title}
+                                      </div>
                                     </div>
 
                                     {/* 描述 */}
@@ -273,7 +277,9 @@ export default function Home() {
                                       {/* 时间信息 */}
                                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground/80">
                                         <Clock className="h-3.5 w-3.5" />
-                                        <span>{formatDateTime(bounty.createdAt)}</span>
+                                        <span>
+                                          {formatDateTime(bounty.createdAt)}
+                                        </span>
                                       </div>
 
                                       {/* 查看和竞标数据 */}
@@ -322,64 +328,6 @@ export default function Home() {
                 )}
               </div>
 
-              {/* 热门悬赏 */}
-              <div>
-                <h2 className="text-2xl font-bold mb-6 flex items-center">
-                  <span className="bg-red-100 p-1.5 rounded-md mr-2">
-                    <TrendingUp className="h-5 w-5 text-red-500" />
-                  </span>
-                  热门悬赏
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {hotTasks.map((task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-all">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-semibold mb-2">{task.title}</h3>
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/40 text-xs text-muted-foreground">
-                              {task.category}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-amber-100/50 
-                            px-3 py-1 rounded-full border border-amber-200/30 shadow-sm">
-                            <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full p-1">
-                              <Coins className="h-3 w-3 text-white" />
-                            </div>
-                            <span className="text-sm font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
-                              {task.reward}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            截止: {task.deadline}
-                          </span>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="border-primary/20 text-primary hover:bg-primary/5"
-                          >
-                            查看详情
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                <div className="text-center mt-6">
-                  <Link href="/bounty">
-                    <Button 
-                      variant="outline"
-                      className="border-primary/20 text-primary hover:bg-primary/5"
-                    >
-                      查看更多悬赏
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
               {/* 平台特色 */}
               <div className="bg-gradient-to-br from-white to-muted/20 rounded-xl p-8 shadow-sm border">
                 <h2 className="text-2xl font-bold mb-6 text-center">平台特色</h2>
@@ -419,6 +367,7 @@ export default function Home() {
             <div className="space-y-6 pt-6">
               {/* 发布悬赏卡片 */}
               <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-primary/90 to-primary group">
+                <div className="absolute inset-0 bg-[linear-gradient(40deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] opacity-50 group-hover:opacity-100 transition-opacity" />
                 <CardContent className="p-6 text-white space-y-4">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
@@ -442,53 +391,97 @@ export default function Home() {
                 </CardContent>
               </Card>
 
-              {/* 为您推荐 - 改进样式 */}
-              <Card className="border shadow-sm hover:shadow-md transition-all overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100/50 border-b py-4">
+              {/* 热门悬赏 - 新设计 */}
+              <Card className="border shadow-sm hover:shadow-md transition-all overflow-hidden py-0">
+                <CardHeader className="bg-gradient-to-r from-red-50 to-amber-50/50 border-b py-4">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="p-1.5 bg-amber-100 rounded-md">
-                      <TrendingUp className="h-5 w-5 text-amber-600" />
+                    <div className="p-1.5 bg-gradient-to-br from-red-100 to-amber-100 rounded-lg">
+                      <TrendingUp className="h-5 w-5 text-red-500" />
                     </div>
-                    热门推荐
+                    <span className="bg-gradient-to-r from-red-600 to-amber-600 bg-clip-text text-transparent">
+                      热门悬赏
+                    </span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  {recommendedTasks.map((task) => (
-                    <Link href={`/bounty/${task.id}`} key={task.id}>
-                      <div className="group p-3 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <h4 className="text-sm font-medium group-hover:text-primary transition-colors line-clamp-2">
-                            {task.title}
-                          </h4>
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full 
-                            bg-gradient-to-r from-amber-50 to-amber-100/50 
-                            border border-amber-200/30 shadow-sm shrink-0"
-                          >
-                            <Coins className="h-3.5 w-3.5 text-amber-600" />
-                            <span className="text-sm font-semibold text-amber-700">{task.reward}</span>
+                <CardContent className="p-4 space-y-3">
+                  {isHotLoading ? (
+                    // 加载状态显示骨架屏
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="p-3 space-y-3">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-1/3" />
+                      </div>
+                    ))
+                  ) : hotBounties.length > 0 ? (
+                    hotBounties.map((bounty) => (
+                      <Link href={`/bounty/${bounty.id}`} key={bounty.id}>
+                        <div className="group p-3 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer border border-transparent hover:border-primary/10">
+                          <div className="flex flex-col gap-2">
+                            {/* 用户信息和积分 */}
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <UserAvatar
+                                  userId={bounty.userId}
+                                  username={bounty.username}
+                                  avatar={bounty.avatar}
+                                  size="sm"
+                                />
+                                <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                                  {bounty.username}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full 
+                                bg-gradient-to-r from-amber-50 to-amber-100/50 
+                                border border-amber-200/30 shadow-sm shrink-0 group-hover:scale-105 transition-transform"
+                              >
+                                <Coins className="h-3.5 w-3.5 text-amber-600" />
+                                <span className="text-sm font-semibold text-amber-700">
+                                  {bounty.points}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* 标题和描述 */}
+                            <div className="flex flex-col gap-1">
+                              <h4 className="text-sm font-medium group-hover:text-primary transition-colors line-clamp-2">
+                                {bounty.title}
+                              </h4>
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {bounty.description}
+                              </p>
+                            </div>
+
+                            {/* 统计信息 */}
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1">
+                                  <Eye className="h-3.5 w-3.5" />
+                                  <span>{bounty.viewCount}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-3.5 w-3.5" />
+                                  <span>{bounty.bidCount}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>{formatDateTime(bounty.createdAt)}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Eye className="h-3.5 w-3.5" />
-                          <span>238 浏览</span>
-                          <Users className="h-3.5 w-3.5 ml-2" />
-                          <span>12 投标</span>
-                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">暂无热门悬赏</p>
                     </div>
-                    </Link>
-                  ))}
-                  <Link href="/bounty" className="block mt-4">
-                    <Button 
-                      variant="ghost" 
-                      className="w-full text-primary hover:bg-primary/5 border border-primary/20"
-                    >
-                      查看更多推荐
-                    </Button>
-                  </Link>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* 常用功能 - 改进样式 */}
+              {/* 常用功能 */}
               <Card className="border shadow-sm hover:shadow-md transition-all">
                 <CardContent className="grid grid-cols-2 gap-3 p-4">
                   <Link href="/bounty/favorite" className="block">

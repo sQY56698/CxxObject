@@ -8,8 +8,6 @@ import com.flowerwine.cxx.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -570,11 +568,30 @@ public class BountyService {
     }
 
     /**
-     * 获取最新的N个悬赏（用于首页轮播）
+     * 获取最新的进行中悬赏（用于首页轮播）
      */
     public List<FileBountyDTO> getLatestBounties(Long currentUserId) {
         Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<FileBounty> bountyPage = fileBountyRepository.findAll(pageable);
+        Page<FileBounty> bountyPage = fileBountyRepository.findByStatus(
+            BountyStatusEnum.IN_PROGRESS.getValue(), 
+            pageable
+        );
+        
+        return bountyPage.getContent().stream()
+                .map(bounty -> convertToDTO(bounty, currentUserId))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取热门悬赏（根据浏览量排序）
+     */
+    public List<FileBountyDTO> getHotBounties(Long currentUserId) {
+        // 获取前3个浏览量最高的进行中悬赏
+        Pageable pageable = PageRequest.of(0, 4, Sort.by(Sort.Direction.DESC, "viewCount"));
+        Page<FileBounty> bountyPage = fileBountyRepository.findByStatus(
+            BountyStatusEnum.IN_PROGRESS.getValue(), 
+            pageable
+        );
         
         return bountyPage.getContent().stream()
                 .map(bounty -> convertToDTO(bounty, currentUserId))
