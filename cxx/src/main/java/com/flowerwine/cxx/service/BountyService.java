@@ -621,4 +621,29 @@ public class BountyService {
             .map(bounty -> convertToDTO(bounty, currentUserId))
             .collect(Collectors.toList());
     }
+
+    /**
+     * 获取排序后的悬赏列表（按时间和浏览量）
+     */
+    public Page<FileBountyDTO> getSortedBountyList(Pageable pageable, Long currentUserId) {
+        // 创建排序条件：先按创建时间排序，再按浏览量排序
+        Sort sort = Sort.by(
+            Sort.Order.desc("createdAt"),
+            Sort.Order.desc("viewCount")
+        );
+        
+        // 使用带排序的分页对象
+        Pageable sortedPageable = PageRequest.of(
+            pageable.getPageNumber(),
+            pageable.getPageSize(),
+            sort
+        );
+        
+        Page<FileBounty> bountyPage = fileBountyRepository.findAll(sortedPageable);
+        List<FileBountyDTO> dtoList = bountyPage.getContent().stream()
+            .map(bounty -> convertToDTO(bounty, currentUserId))
+            .collect(Collectors.toList());
+        
+        return new PageImpl<>(dtoList, sortedPageable, bountyPage.getTotalElements());
+    }
 }

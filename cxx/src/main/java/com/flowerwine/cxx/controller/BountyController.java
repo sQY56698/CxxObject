@@ -232,4 +232,18 @@ public class BountyController {
         List<FileBountyDTO> bounties = bountyService.searchBounties(keyword, authUser.getId());
         return ResponseEntity.ok(bounties);
     }
+
+    /**
+     * 获取排序后的悬赏列表（按时间和浏览量）
+     */
+    @GetMapping("/list/sorted")
+    public ResponseEntity<Page<FileBountyDTO>> getSortedBountyList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @CurrentUser AuthUser authUser
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<FileBountyDTO> bountyPage = bountyService.getSortedBountyList(pageable, authUser.getId());
+        return ResponseEntity.ok(bountyPage);
+    }
 }

@@ -196,7 +196,7 @@ export function UserInfoPanel({ userId, children, className }: UserInfoPanelProp
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="flex-1 space-y-1">
+                <div className="flex-1 space-y-1 flex flex-col justify-center">
                   <h4 className="font-semibold text-lg leading-none">
                     {userInfo.username}
                   </h4>

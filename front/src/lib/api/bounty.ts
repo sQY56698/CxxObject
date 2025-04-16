@@ -132,4 +132,12 @@ export const bountyApi = {
     const response = await apiClient.get<FileBounty[]>(`/bounty/search?keyword=${encodeURIComponent(keyword)}`);
     return response.data;
   },
+
+  // 获取排序后的悬赏列表（按时间和浏览量）
+  getBountyListSorted: async (page = 0, size = 10) => {
+    const response = await apiClient.get<BountyListResponse>(
+      `/bounty/list/sorted?page=${page}&size=${size}`
+    );
+    return response.data;
+  },
 }; 
