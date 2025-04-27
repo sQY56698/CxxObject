@@ -44,5 +44,6 @@ export const fileApi = {
       relationId
     });
     return response.data;
-  }
-}; 
+  },
+  
+};

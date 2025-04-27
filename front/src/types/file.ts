@@ -83,4 +83,39 @@ export interface FileStatus {
   status: "waiting" | "uploading" | "paused" | "complete" | "error";
   error?: string;
   fileId?: number; // 上传成功后的文件ID
-} 
+}
+
+export interface UserFileTaskDTO {
+  id: number;
+  userId: number;
+  username: string;
+  avatar?: string;
+  title: string;
+  description: string;
+  fileId: number;
+  fileInfo?: FileInfo;
+  isFree: boolean;
+  requiredPoints: number;
+  status: number;
+  statusText: string;
+  downloadCount: number;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+  isMine: boolean;
+  hasAccess: boolean;
+}
+
+export enum UserFileTaskStatusEnum {
+  REVIEWING = 0,
+  PUBLISHED = 1,
+  SUCCESS = 2,
+  REJECTED = 3,
+}
+
+export const UserFileTaskStatusMap = {
+  [UserFileTaskStatusEnum.REVIEWING]: '审核中',
+  [UserFileTaskStatusEnum.PUBLISHED]: '已发布',
+  [UserFileTaskStatusEnum.SUCCESS]: '发布成功',
+  [UserFileTaskStatusEnum.REJECTED]: '已驳回',
+}; 

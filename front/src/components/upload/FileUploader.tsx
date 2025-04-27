@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import ChunkUploader from './ChunkUploader';
 
+
 interface FileUploaderProps {
   children: React.ReactNode;
   onUploadComplete?: (fileId: number) => void;

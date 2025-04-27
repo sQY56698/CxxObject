@@ -20,6 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final FileUploadProperties uploadProperties;
     private final CurrentUserArgumentResolver currentUserArgumentResolver;
+    private final CurrentAdminArgumentResolver currentAdminArgumentResolver;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -33,6 +34,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(currentUserArgumentResolver);
+        resolvers.add(currentAdminArgumentResolver);
     }
 
 }

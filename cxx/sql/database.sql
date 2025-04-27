@@ -202,9 +202,6 @@ CREATE TABLE IF NOT EXISTS `user_upload_file` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `user_id` BIGINT UNSIGNED NOT NULL COMMENT '上传用户ID',
     `file_id` BIGINT UNSIGNED NOT NULL COMMENT '文件ID',
-    `title` VARCHAR(100) NOT NULL COMMENT '文件标题',
-    `description` TEXT DEFAULT NULL COMMENT '文件描述',
-    `download_count` INT DEFAULT 0 COMMENT '下载次数',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
@@ -295,3 +292,53 @@ CREATE TABLE IF NOT EXISTS `system_message_read` (
     UNIQUE KEY `idx_message_user` (`message_id`, `user_id`),
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统消息已读表';
+
+-- 管理员表
+DROP TABLE IF EXISTS `admin_user`;
+CREATE TABLE IF NOT EXISTS `admin_user` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '管理员ID，主键',
+    `username` VARCHAR(50) NOT NULL COMMENT '管理员用户名，唯一',
+    `password` VARCHAR(128) NOT NULL COMMENT '密码，加密存储',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0-禁用，1-正常',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
+
+-- 文件审核历史表
+DROP TABLE IF EXISTS `file_review_history`;
+CREATE TABLE IF NOT EXISTS `file_review_history` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `file_upload_id` BIGINT UNSIGNED NOT NULL COMMENT '关联的上传文件ID',
+    `reviewer_id` BIGINT UNSIGNED NOT NULL COMMENT '审核人ID',
+    `comment` VARCHAR(255) DEFAULT NULL COMMENT '审核评论',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_file_upload_id` (`file_upload_id`),
+    KEY `idx_reviewer_id` (`reviewer_id`),
+    KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件审核历史表';
+
+-- 用户自主上传任务表
+DROP TABLE IF EXISTS `user_file_task`;
+CREATE TABLE IF NOT EXISTS `user_file_task` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '任务ID，主键',
+    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '上传用户ID',
+    `title` VARCHAR(100) NOT NULL COMMENT '任务标题',
+    `description` TEXT NOT NULL COMMENT '任务描述',
+    `file_id` BIGINT UNSIGNED NOT NULL COMMENT '文件ID',
+    `is_free` TINYINT NOT NULL DEFAULT 1 COMMENT '是否免费：0-收费，1-免费',
+    `required_points` INT NOT NULL DEFAULT 0 COMMENT '下载所需积分',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-审核中，1-已发布，2-发布成功，3-已驳回',
+    `download_count` INT DEFAULT 0 COMMENT '下载次数',
+    `view_count` INT DEFAULT 0 COMMENT '查看次数',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_file_id` (`file_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_is_free` (`is_free`),
+    KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户自主上传任务表';

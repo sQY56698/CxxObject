@@ -7,28 +7,22 @@ import Link from "next/link";
 import {
   PlusCircle, 
   TrendingUp, 
-  Clock, 
-  CircleDot, 
-  CheckCircle2, 
-  XCircle, 
-  Coins,
-  Eye,
-  Users,
   ChevronLeft,
   ChevronRight,
   FileSearch,
+  Upload,
+  FileText,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bountyApi } from "@/lib/api/bounty";
-import { FileBounty, BountyStatus } from "@/types/bounty";
-import { formatDateTime } from "@/lib/utils";
+import { FileBounty } from "@/types/bounty";
 import { toast } from "sonner";
 import useEmblaCarousel from 'embla-carousel-react';
 import AutoPlay from 'embla-carousel-autoplay';
-import { cn } from "@/lib/utils";
-import { UserAvatar } from "@/components/UserAvatar";
 import { BountyList } from "@/components/bounty/BountyList";
 import { BountyCard } from "@/components/bounty/BountyCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ResourceList } from "@/components/resource/ResourceList";
 
 export default function Home() {
   const [latestBounties, setLatestBounties] = useState<FileBounty[]>([]);
@@ -104,40 +98,6 @@ export default function Home() {
 
     loadHotBounties();
   }, []);
-
-  // 获取状态样式
-  const getStatusStyle = (status: number) => {
-    switch (status) {
-      case BountyStatus.IN_PROGRESS:
-        return {
-          bg: "bg-emerald-50",
-          text: "text-emerald-600",
-          label: "进行中",
-          icon: <CircleDot className="h-3.5 w-3.5" />,
-        };
-      case BountyStatus.COMPLETED:
-        return {
-          bg: "bg-blue-50",
-          text: "text-blue-600",
-          label: "已完成",
-          icon: <CheckCircle2 className="h-3.5 w-3.5" />,
-        };
-      case BountyStatus.CLOSED:
-        return {
-          bg: "bg-gray-50",
-          text: "text-gray-600",
-          label: "已关闭",
-          icon: <XCircle className="h-3.5 w-3.5" />,
-        };
-      default:
-        return {
-          bg: "bg-gray-50",
-          text: "text-gray-600",
-          label: "未知",
-          icon: <CircleDot className="h-3.5 w-3.5" />,
-        };
-    }
-  };
 
   return (
     <main className="min-h-screen bg-background pb-16">
@@ -234,18 +194,33 @@ export default function Home() {
                 )}
               </div>
 
-              {/* 悬赏列表 */}
+              {/* 内容选项卡 - 悬赏/资源 */}
               <div className="bg-gradient-to-br from-white to-muted/20 rounded-xl p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl md:text-2xl font-bold flex items-center">
-                    <span className="bg-primary/10 p-1.5 rounded-md mr-2">
-                      <FileSearch className="h-5 w-5 text-primary" />
-                    </span>
-                    更多悬赏
-                  </h2>
-                </div>
-                
-                <BountyList />
+                <Tabs defaultValue="bounties" className="w-full">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center">
+                      <h2 className="text-xl md:text-2xl font-bold mr-4">探索内容</h2>
+                      <TabsList className="grid grid-cols-2 h-9">
+                        <TabsTrigger value="bounties" className="flex items-center gap-1.5">
+                          <FileSearch className="h-4 w-4" />
+                          更多悬赏
+                        </TabsTrigger>
+                        <TabsTrigger value="resources" className="flex items-center gap-1.5">
+                          <FileText className="h-4 w-4" />
+                          更多资源
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
+                  </div>
+                  
+                  <TabsContent value="bounties" className="mt-0">
+                    <BountyList />
+                  </TabsContent>
+                  
+                  <TabsContent value="resources" className="mt-0">
+                    <ResourceList />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
 
@@ -270,6 +245,31 @@ export default function Home() {
                         transition-all duration-300 font-medium text-base"
                     >
                       发布悬赏
+                      <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* 添加发布资源卡片 */}
+              <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-indigo-600 to-blue-700 group">
+                <CardContent className="p-6 text-white space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                      <Upload className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold">分享我的资源</h3>
+                  </div>
+                  <p className="text-sm text-white/80">
+                    上传分享您的资源，与社区用户交流并获取积分
+                  </p>
+                  <Link href="/resources/share" className="block mt-4">
+                    <Button 
+                      className="w-full gap-2 bg-white text-indigo-600 hover:bg-white/90 
+                        shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/30 
+                        transition-all duration-300 font-medium text-base"
+                    >
+                      分享资源
                       <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>

@@ -24,6 +24,8 @@ import { bountyApi } from "@/lib/api/bounty";
 import { FileType, FileTypeColors } from "@/types/file";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserInfoPanel } from "@/components/UserInfoPanel";
+import { ALLOWED_FILE_TYPES } from "@/lib/constant";
+import { downloadFile } from "@/lib/utils";
 
 interface BidListProps {
   bids: FileBid[];
@@ -104,14 +106,7 @@ export const BidList = forwardRef<{openUploader: (bidId: number) => void}, BidLi
       const fileInfo = await bountyApi.downloadBidFile(bidId);
       
       if (fileInfo && fileInfo.fileUrl && fileInfo.hasAccess) {
-        // 创建临时链接并点击触发下载
-        const link = document.createElement('a');
-        link.href = fileInfo.fileUrl;
-        link.target = '_blank';
-        link.download = fileInfo.originalFilename || 'download';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        downloadFile(fileInfo);
         
         toast.success(`文件 ${fileInfo.originalFilename} 下载中`);
       } else {
@@ -139,17 +134,25 @@ export const BidList = forwardRef<{openUploader: (bidId: number) => void}, BidLi
       {bids.map((bid) => (
         <div
           key={bid.id}
-          className={`border rounded-lg ${bid.isWinner ? 'border-blue-200 bg-blue-50/50' : ''} overflow-hidden transition-all hover:shadow-sm`}
+          className={`border rounded-lg ${
+            bid.isWinner ? "border-blue-200 bg-blue-50/50" : ""
+          } overflow-hidden transition-all hover:shadow-sm`}
         >
           {/* 竞标者信息头部 - 优化布局 */}
           <div className="p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <UserInfoPanel userId={bid.userId} className="cursor-pointer">
-                <Avatar className={`h-9 w-9 ${bid.isWinner ? 'ring-2 ring-blue-300' : ''}`}>
+                <Avatar
+                  className={`h-9 w-9 ${
+                    bid.isWinner ? "ring-2 ring-blue-300" : ""
+                  }`}
+                >
                   {bid.avatar ? (
                     <AvatarImage src={bid.avatar} alt={bid.username} />
                   ) : (
-                    <AvatarFallback>{bid.username.charAt(0).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>
+                      {bid.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
                   )}
                 </Avatar>
               </UserInfoPanel>
@@ -182,27 +185,24 @@ export const BidList = forwardRef<{openUploader: (bidId: number) => void}, BidLi
                     setDialogOpen(open);
                   }}
                   maxFileSize={10 * 1024 * 1024 * 1024} // 10GB
-                  allowedFileTypes={[
-                    'application/zip',
-                    'application/x-zip-compressed',
-                    'application/x-rar-compressed',
-                    'application/pdf',
-                    'application/msword',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                    'application/vnd.ms-excel',
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    'application/vnd.ms-powerpoint',
-                    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                    'text/*',
-                    'image/*'
-                  ]}
+                  allowedFileTypes={ALLOWED_FILE_TYPES}
                   buttonText={bid.hasFile ? "更新文件" : "上传文件"}
                 >
-                  <Button variant={bid.hasFile ? "outline" : "default"} size="sm" className={bid.hasFile ? "" : "bg-primary/90"}>
+                  <Button
+                    variant={bid.hasFile ? "outline" : "default"}
+                    size="sm"
+                    className={bid.hasFile ? "" : "bg-primary/90"}
+                  >
                     {bid.hasFile ? (
-                      <><PenLine className="h-4 w-4 mr-2" />更新文件</>
+                      <>
+                        <PenLine className="h-4 w-4 mr-2" />
+                        更新文件
+                      </>
                     ) : (
-                      <><Upload className="h-4 w-4 mr-2" />上传文件</>
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        上传文件
+                      </>
                     )}
                   </Button>
                 </FileUploader>
@@ -235,28 +235,34 @@ export const BidList = forwardRef<{openUploader: (bidId: number) => void}, BidLi
               )}
             </div>
           </div>
-            
+
           {/* 文件信息展示区域 - 优化布局 */}
           {bid.hasFile && bid.fileInfo && (
-            <div className={`px-4 py-3 border-t ${
-              bid.fileInfo.hasAccess 
-                ? 'bg-muted/30' 
-                : 'bg-muted/10 border-dashed'
-            }`}>
+            <div
+              className={`px-4 py-3 border-t ${
+                bid.fileInfo.hasAccess
+                  ? "bg-muted/30"
+                  : "bg-muted/10 border-dashed"
+              }`}
+            >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-md ${getFileIconClass(bid.fileInfo.fileType)} bg-opacity-10`}>
+                <div
+                  className={`p-2 rounded-md ${getFileIconClass(
+                    bid.fileInfo.fileType
+                  )} bg-opacity-10`}
+                >
                   {getFileIcon(bid.fileInfo.fileType)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">
-                    {bid.fileInfo.hasAccess 
-                      ? bid.fileInfo.originalFilename 
+                    {bid.fileInfo.hasAccess
+                      ? bid.fileInfo.originalFilename
                       : "[受保护的文件]"}
                   </div>
                   <div className="text-xs text-muted-foreground flex gap-2">
                     <span>{formatFileSize(bid.fileInfo.fileSize)}</span>
                     <span>·</span>
-                    <span>{formatDateTime(bid.fileInfo.createdAt || '')}</span>
+                    <span>{formatDateTime(bid.fileInfo.createdAt || "")}</span>
                   </div>
                 </div>
                 {!bid.fileInfo.hasAccess && (

@@ -346,24 +346,19 @@ public class BountyService {
      * 上传文件供下载
      */
     @Transactional
-    public UserUploadFileDTO uploadFile(String title, String description, MultipartFile file, Long userId) throws IOException {
+    public UserUploadFileDTO uploadFile(MultipartFile file, Long userId) throws IOException {
         // 上传文件
         FileInfoDTO fileInfoDTO = fileService.uploadFile(file, "upload");
         
         // 创建用户上传文件记录
         UserUploadFile userFile = new UserUploadFile();
-        userFile.setTitle(title);
-        userFile.setDescription(description);
         userFile.setUserId(userId);
-        userFile.setDownloadCount(0);
-        
+
         UserUploadFile savedFile = userUploadFileRepository.save(userFile);
         
         // 奖励积分
         pointsService.changePoints(userId, 0,
-                PointActionEnum.UPLOAD_FILE, "上传文件: " + title);
-        
-        log.info("用户 {} 上传文件 {}", userId, title);
+                PointActionEnum.UPLOAD_FILE, "上传文件");
         
         return convertToUserFileDTO(savedFile, userId);
     }
@@ -519,11 +514,8 @@ public class BountyService {
         return UserUploadFileDTO.builder()
                 .id(userFile.getId())
                 .fileId(userFile.getFileId())
-                .title(userFile.getTitle())
-                .description(userFile.getDescription())
                 .userId(userFile.getUserId())
                 .username(username)
-                .downloadCount(userFile.getDownloadCount())
                 .createdAt(userFile.getCreatedAt())
                 .fileInfo(fileInfo)
                 .isMine(Objects.equals(userFile.getUserId(), currentUserId))

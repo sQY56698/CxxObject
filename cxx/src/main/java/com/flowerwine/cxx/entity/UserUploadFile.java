@@ -2,6 +2,7 @@ package com.flowerwine.cxx.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserUploadFile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,15 +23,6 @@ public class UserUploadFile {
     
     @Column(name = "user_id", nullable = false)
     private Long userId;
-    
-    @Column(nullable = false, length = 100)
-    private String title;
-    
-    @Column(columnDefinition = "TEXT")
-    private String description;
-    
-    @Column(name = "download_count")
-    private Integer downloadCount = 0;
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

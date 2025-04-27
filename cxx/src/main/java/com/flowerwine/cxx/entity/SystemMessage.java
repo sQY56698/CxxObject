@@ -1,7 +1,6 @@
 package com.flowerwine.cxx.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,7 +18,6 @@ public class SystemMessage {
     private Long id;
     
     @Column(nullable = false)
-    @Max(value = 100, message = "标题长度不能超过100个字符")
     private String title;
     
     @Column(nullable = false, columnDefinition = "TEXT")

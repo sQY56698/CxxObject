@@ -7,24 +7,13 @@ import com.flowerwine.cxx.service.FileService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import me.desair.tus.server.TusFileUploadService;
 import me.desair.tus.server.exception.TusException;
-import me.desair.tus.server.upload.UploadInfo;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -35,8 +24,6 @@ import java.util.Map;
 public class FileController {
 
     private final FileService fileService;
-    private final TusFileUploadService tusFileUploadService;
-    private final TusUploadController tusUploadController;
 
     /**
      * 初始化分片上传
@@ -137,19 +124,12 @@ public class FileController {
     }
 
     @PostMapping("/process/{uploadId}")
-    public ResponseEntity<FileInfoDTO> processUploadedFile(
+    public ResponseEntity<?> processUploadedFile(
             @PathVariable String uploadId,
             HttpServletResponse response,
             @CurrentUser AuthUser authUser) throws IOException, TusException {
         
-        UploadInfo uploadInfo = tusFileUploadService.getUploadInfo(uploadId);
-        if (uploadInfo == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        // 使用现有的处理逻辑
-        FileInfoDTO fileInfoDTO = tusUploadController.processCompletedUpload(uploadInfo, authUser, response);
-        return ResponseEntity.ok(fileInfoDTO);
+        return fileService.processUploadedFile(uploadId, response, authUser);
     }
 
     /**

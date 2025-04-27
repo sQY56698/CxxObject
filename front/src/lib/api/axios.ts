@@ -35,8 +35,10 @@ apiClient.interceptors.response.use(
       // 可以使用一个全局事件触发用户状态更新
       window.dispatchEvent(new Event('unauthorized'));
       // 如果不在登录页面，重定向到登录页
-      if (window.location.pathname !== '/auth') {
+      if (window.location.pathname !== '/auth' && !error.config.url?.includes('/admin')) {
         window.location.href = '/auth?mode=login';
+      } else if (window.location.pathname !== '/admin/login' && error.config.url?.includes('/admin')) {
+        window.location.href = '/admin/login';
       }
     } else {
       // 处理其他错误

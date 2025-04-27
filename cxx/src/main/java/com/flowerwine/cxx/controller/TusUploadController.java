@@ -97,7 +97,7 @@ public class TusUploadController {
                 
                 try {
                     // 处理上传完成的文件
-                    processCompletedUpload(uploadInfo, authUser, response);
+                    fileService.processCompletedUpload(uploadInfo, authUser, response);
                 } catch (Exception e) {
                     log.error("处理上传完成的文件时发生错误", e);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -109,85 +109,6 @@ public class TusUploadController {
         }
         
         return ResponseEntity.ok().build();
-    }
-    
-    /**
-     * 处理上传完成的文件
-     */
-    public FileInfoDTO processCompletedUpload(UploadInfo uploadInfo, AuthUser authUser, 
-            HttpServletResponse response) throws IOException, TusException {
-        
-        // 解析元数据
-        Map<String, String> metadata = uploadInfo.getMetadata();
-        String originalFilename = metadata.getOrDefault("filename", "unknown");
-        long fileSize = uploadInfo.getLength();
-        
-        // 获取上传的文件 - uploadInfo.getId().toString() 来传递 uploadUri
-        String uploadUri = uploadInfo.getId().toString();
-        
-        try (InputStream inputStream = tusFileUploadService.getUploadedBytes(uploadUri)) {
-            if (inputStream == null) {
-                log.error("无法获取上传文件的内容: {}", uploadUri);
-                return null;
-            }
-            
-            // 生成唯一文件名
-            String extension = getFileExtension(originalFilename);
-            String fileName = UUID.randomUUID().toString().replace("-", "") + 
-                    (extension.isEmpty() ? "" : "." + extension);
-            
-            // 确定存储路径
-            String storagePath = uploadProperties.getBaseDir();
-            Path targetPath = Paths.get(storagePath, fileName);
-            
-            // 确保目录存在
-            Files.createDirectories(targetPath.getParent());
-            
-            // 保存文件
-            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            
-            // 检测文件类型
-            String mimeType;
-            try {
-                mimeType = tika.detect(targetPath);
-            } catch (Exception e) {
-                log.warn("无法检测文件类型: {}, 使用默认类型", fileName, e);
-                mimeType = "application/octet-stream";
-            }
-            
-            // 保存文件信息到数据库
-            FileInfoDTO fileInfo = fileService.saveFileInfo(
-                    authUser.getId(),
-                    originalFilename,
-                    fileName,
-                    fileName,
-                    FileType.fromMimeType(mimeType).getValue(),
-                    fileSize
-            );
-            
-            // 在响应头中设置文件ID，供前端获取
-            if (response != null) {
-                response.setHeader("X-File-Id", fileInfo.getId().toString());
-            }
-            
-            log.debug("文件已保存: 原始名={}, 存储名={}, ID={}, 路径={}",
-                    originalFilename, fileName, fileInfo.getId(), targetPath);
-            
-            // 清理 tus 临时文件 - 同样使用 uploadUri
-            tusFileUploadService.deleteUpload(uploadUri);
-            
-            return fileInfo;  // 返回文件信息
-        }
-    }
-    
-    /**
-     * 获取文件扩展名
-     */
-    private String getFileExtension(String filename) {
-        if (filename == null || !filename.contains(".")) {
-            return "";
-        }
-        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
     
 }

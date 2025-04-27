@@ -11,7 +11,9 @@ public enum PointActionEnum {
     POST_BOUNTY(5, "发布悬赏"),
     COMPLETE_BOUNTY(6, "完成悬赏"),
     CLOSE_BOUNTY(7, "关闭悬赏"),
-    ADMIN_ADJUST(7, "管理员调整")
+    ADMIN_ADJUST(8, "管理员调整"),
+    FREE_FILE_SUBSIDY(9, "免费文件补贴"),
+    FILE_DOWNLOAD_INCOME(10, "文件下载收入"),
         ;
 
     private final int code;

@@ -1,7 +1,8 @@
 -- 初始化积分事件类型数据
 INSERT INTO `point_action` (`action_code`, `action_name`, `points`, `description`) VALUES
 (1, '每日签到', 0, '用户每日签到获得的积分'),
-(2, '下载文件', 0, '用户下载文件消耗的积分');
+(2, '下载文件', 0, '用户下载文件消耗的积分'),
+(3, '免费文件补贴', 100, '用户发布免费文件获得的补贴积分');
 
 -- 初始化连续签到奖励规则
 INSERT INTO `sign_reward_rule` (`continuous_days`, `reward_points`, `description`) VALUES
@@ -12,3 +13,8 @@ INSERT INTO `sign_reward_rule` (`continuous_days`, `reward_points`, `description
 (5, 800, '连续签到5天奖励800积分'),
 (6, 1500, '连续签到6天奖励1500积分'),
 (7, 2000, '连续签到7天奖励2000积分');
+
+-- 添加默认管理员账户
+INSERT INTO `admin_user` (`username`, `password`) VALUES
+('admin', '$2a$16$rc1OqTmZ4AM3rM/zxw8gbOk9BF8ScYai2B1u/2yR42I.uHRwGAJDq');
+-- 注意：密码是"admin123"的bcrypt加密版本，实际使用时请修改

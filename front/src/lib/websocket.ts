@@ -39,7 +39,7 @@ class WebSocketService {
     system: {
       type: "system",
       needAuth: false,
-      formatter: (userId) => `/user/${userId}/system`,
+      formatter: () => `/topic/system`,
     },
     message: {
       type: "message",

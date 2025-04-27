@@ -385,4 +385,32 @@ public class MessageService {
                 .build();
     }
 
+    /**
+     * 创建系统消息并通过WebSocket发送给所有在线用户
+     */
+    @Transactional
+    public SystemMessageDTO createSystemMessage(String title, String content) {
+        // 创建系统消息记录
+        SystemMessage message = new SystemMessage();
+        message.setTitle(title);
+        message.setContent(content);
+        message = systemMessageRepository.save(message);
+        
+        // 转换为DTO
+        SystemMessageDTO messageDTO = convertToSystemMessageDTO(message);
+        
+        // 通过WebSocket广播消息
+        messagingTemplate.convertAndSend("/topic/system", messageDTO);
+        
+        return messageDTO;
+    }
+
+    /**
+     * 获取所有系统消息（管理员使用）
+     */
+    public Page<SystemMessageDTO> getAllSystemMessages(PageRequest pageRequest) {
+        Page<SystemMessage> messages = systemMessageRepository.findAllByOrderByCreatedAtDesc(pageRequest);
+        return messages.map(this::convertToSystemMessageDTO);
+    }
+
 }

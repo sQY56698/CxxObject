@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { fileApi } from "@/lib/api/file";
+import { FileInfo } from "@/types/file";
 
 interface FileStatus {
   id: string;
@@ -30,24 +31,46 @@ interface FileStatus {
 }
 
 interface ChunkUploaderProps {
+  fileInfo?: FileInfo;
   onUploadSuccess?: (result: any) => void;
   onUploadError?: (error: Error) => void;
   allowedFileTypes?: string[];
   maxFileSize?: number;
   multiple?: boolean;
+  removeUploadedFile?: (fileId: string) => void;
+  removeAllUploadedFiles?: () => void;
 }
 
 export default function ChunkUploader({
+  fileInfo,
   onUploadSuccess,
   onUploadError,
   allowedFileTypes = ["image/*", "video/*", "application/*"],
   maxFileSize = 10 * 1024 * 1024 * 1024,
   multiple = true,
+  removeUploadedFile,
+  removeAllUploadedFiles,
 }: ChunkUploaderProps) {
   const [files, setFiles] = useState<FileStatus[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const uppyRef = useRef<Uppy | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (fileInfo) {
+      const { id, fileName, fileSize, fileType } = fileInfo;
+      setFiles((prev) => [
+        {
+          id: id.toString(),
+          name: fileName,
+          size: fileSize,
+          type: fileType,
+          progress: 100,
+          status: "complete",
+        },
+      ]);
+    }
+  }, [fileInfo]);
 
   // 初始化 Uppy
   useEffect(() => {
@@ -233,6 +256,7 @@ export default function ChunkUploader({
     uppyRef.current?.removeFile(fileId);
     setFiles((prev) => prev.filter((f) => f.id !== fileId));
     fileInputRef.current!.value = "";
+    removeUploadedFile?.(fileId);
   };
 
   const handlePauseResume = (fileId: string) => {
@@ -267,6 +291,7 @@ export default function ChunkUploader({
     uppyRef.current?.cancelAll();
     setFiles([]);
     fileInputRef.current!.value = "";
+    removeAllUploadedFiles?.();
   };
 
   // 格式化文件大小
@@ -391,12 +416,13 @@ export default function ChunkUploader({
       {files.length > 0 && (
         <div className="flex justify-end gap-4">
           <Button
+            type="button"
             variant="outline"
             onClick={clearList}
           >
-            清空列表
+            {multiple ? "清空列表" : "清除文件"}
           </Button>
-          <Button onClick={startUpload}>开始上传</Button>
+          <Button type="button" onClick={startUpload}>开始上传</Button>
         </div>
       )}
     </div>

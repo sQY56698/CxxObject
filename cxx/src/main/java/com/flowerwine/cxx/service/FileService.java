@@ -1,20 +1,25 @@
 package com.flowerwine.cxx.service;
 
 import com.flowerwine.cxx.config.FileUploadProperties;
+import com.flowerwine.cxx.controller.TusUploadController;
 import com.flowerwine.cxx.dto.FileInfoDTO;
 import com.flowerwine.cxx.entity.FileBid;
 import com.flowerwine.cxx.entity.FileBounty;
 import com.flowerwine.cxx.entity.FileDownloadRecord;
 import com.flowerwine.cxx.entity.FileInfo;
-import com.flowerwine.cxx.repository.FileInfoRepository;
-import com.flowerwine.cxx.repository.FileBidRepository;
-import com.flowerwine.cxx.repository.FileBountyRepository;
-import com.flowerwine.cxx.repository.FileDownloadRecordRepository;
+import com.flowerwine.cxx.enums.FileType;
+import com.flowerwine.cxx.repository.*;
+import com.flowerwine.cxx.security.AuthUser;
 import com.flowerwine.cxx.util.FileUploadUtil;
 import com.flowerwine.cxx.util.ChunkFileUploadUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import me.desair.tus.server.TusFileUploadService;
+import me.desair.tus.server.exception.TusException;
+import me.desair.tus.server.upload.UploadInfo;
 import org.apache.commons.io.FilenameUtils;
+import com.flowerwine.cxx.entity.UserUploadFile;
 import org.apache.tika.Tika;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -31,17 +36,18 @@ import org.springframework.http.HttpHeaders;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.io.File;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,6 +62,8 @@ public class FileService {
     private final FileBidRepository fileBidRepository;
     private final FileBountyRepository fileBountyRepository;
     private final FileDownloadRecordRepository fileDownloadRecordRepository;
+    private final TusFileUploadService tusFileUploadService;
+    private final UserUploadFileRepository userUploadFileRepository;
 
     /**
      * 通用文件上传方法
@@ -82,6 +90,102 @@ public class FileService {
         fileInfo.setFileUrl(String.format("%s/%s/%s", uploadProperties.getUrlPrefix(), config.getDirectory(), fileInfo.getFileName()));
         // 上传文件
         return fileInfo;
+    }
+
+    public ResponseEntity<?> processUploadedFile(String uploadId, HttpServletResponse response, AuthUser authUser) throws IOException, TusException {
+        UploadInfo uploadInfo = tusFileUploadService.getUploadInfo(uploadId);
+        if (uploadInfo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        // 使用现有的处理逻辑 
+        FileInfoDTO fileInfoDTO = processCompletedUpload(uploadInfo, authUser, response);
+
+        userUploadFileRepository.save(UserUploadFile.builder()
+            .fileId(fileInfoDTO.getId())
+            .userId(authUser.getId())
+            .build());
+        
+        return ResponseEntity.ok(fileInfoDTO);
+    }
+
+    /**
+     * 处理上传完成的文件
+     */
+    public FileInfoDTO processCompletedUpload(UploadInfo uploadInfo, AuthUser authUser,
+                                              HttpServletResponse response) throws IOException, TusException {
+
+        // 解析元数据
+        Map<String, String> metadata = uploadInfo.getMetadata();
+        String originalFilename = metadata.getOrDefault("filename", "unknown");
+        long fileSize = uploadInfo.getLength();
+
+        // 获取上传的文件 - uploadInfo.getId().toString() 来传递 uploadUri
+        String uploadUri = uploadInfo.getId().toString();
+
+        try (InputStream inputStream = tusFileUploadService.getUploadedBytes(uploadUri)) {
+            if (inputStream == null) {
+                log.error("无法获取上传文件的内容: {}", uploadUri);
+                return null;
+            }
+
+            // 生成唯一文件名
+            String extension = getFileExtension(originalFilename);
+            String fileName = UUID.randomUUID().toString().replace("-", "") +
+                    (extension.isEmpty() ? "" : "." + extension);
+
+            // 确定存储路径
+            String storagePath = uploadProperties.getBaseDir();
+            Path targetPath = Paths.get(storagePath, fileName);
+
+            // 确保目录存在
+            Files.createDirectories(targetPath.getParent());
+
+            // 保存文件
+            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 检测文件类型
+            String mimeType;
+            try {
+                mimeType = tika.detect(targetPath);
+            } catch (Exception e) {
+                log.warn("无法检测文件类型: {}, 使用默认类型", fileName, e);
+                mimeType = "application/octet-stream";
+            }
+
+            // 保存文件信息到数据库
+            FileInfoDTO fileInfo = saveFileInfo(
+                    authUser.getId(),
+                    originalFilename,
+                    fileName,
+                    fileName,
+                    FileType.fromMimeType(mimeType).getValue(),
+                    fileSize
+            );
+
+            // 在响应头中设置文件ID，供前端获取
+            if (response != null) {
+                response.setHeader("X-File-Id", fileInfo.getId().toString());
+            }
+
+            log.debug("文件已保存: 原始名={}, 存储名={}, ID={}, 路径={}",
+                    originalFilename, fileName, fileInfo.getId(), targetPath);
+
+            // 清理 tus 临时文件 - 同样使用 uploadUri
+            tusFileUploadService.deleteUpload(uploadUri);
+
+            return fileInfo;  // 返回文件信息
+        }
+    }
+
+    /**
+     * 获取文件扩展名
+     */
+    private String getFileExtension(String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return "";
+        }
+        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
 
     /**
@@ -406,13 +510,17 @@ public class FileService {
                 .fileSize(fileInfo.getFileSize())
                 .fileType(fileInfo.getFileType())
                 .originalFilename(hasPermission ? fileInfo.getOriginalName() : "[受保护的文件]")
-                .fileUrl(hasPermission ? "/uploads/" + fileInfo.getFilePath() : null)
+                .fileUrl(hasPermission ? getFileUrl(fileInfo.getFilePath()) : null)
                 .hasAccess(hasPermission)
                 .uploaderId(fileInfo.getUserId())
                 .createdAt(fileInfo.getCreatedAt().toString())
                 .build();
         
         return dto;
+    }
+
+    public String getFileUrl(String filePath) {
+        return "/uploads/" + filePath;
     }
 
     /**
@@ -510,6 +618,28 @@ public class FileService {
      * 获取文件信息（兼容旧版本，不进行权限检查）
      */
     public FileInfoDTO getFileInfo(Long fileId) {
-        return getFileInfo(fileId, null, false);
+        // 直接查询文件信息，不做权限检查
+        FileInfo fileInfo = fileInfoRepository.findById(fileId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "文件不存在"));
+        
+        return convertToFileInfoDTO(fileInfo);
+    }
+    
+    /**
+     * 将 FileInfo 实体转换为 FileInfoDTO
+     */
+    private FileInfoDTO convertToFileInfoDTO(FileInfo fileInfo) {
+        return FileInfoDTO.builder()
+            .id(fileInfo.getId())
+            .fileName(fileInfo.getFileName())
+            .originalFilename(fileInfo.getOriginalName())
+            .fileUrl(getFileUrl(fileInfo.getFilePath()))
+            .fileSize(fileInfo.getFileSize())
+            .fileType(fileInfo.getFileType())
+            .uploaderId(fileInfo.getUserId())
+            .hasAccess(true)
+            .createdAt(fileInfo.getCreatedAt().toString())
+            .build();
     }
 }

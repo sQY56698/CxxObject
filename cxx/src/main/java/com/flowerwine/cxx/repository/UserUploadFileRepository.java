@@ -14,9 +14,4 @@ import java.util.Optional;
 public interface UserUploadFileRepository extends JpaRepository<UserUploadFile, Long> {
     Optional<UserUploadFile> findByFileId(Long fileId);
     Page<UserUploadFile> findByUserId(Long userId, Pageable pageable);
-    Page<UserUploadFile> findByTitleContainingOrDescriptionContaining(String titleKeyword, String descriptionKeyword, Pageable pageable);
-    
-    @Modifying
-    @Query("UPDATE UserUploadFile uuf SET uuf.downloadCount = uuf.downloadCount + 1 WHERE uuf.id = :id")
-    void incrementDownloadCount(Long id);
 }
