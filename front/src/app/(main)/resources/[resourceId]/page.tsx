@@ -15,7 +15,8 @@ import {
   Tag,
   MessageSquare,
   AlertCircle,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { formatDateTime, formatFileSize, cn } from "@/lib/utils";
@@ -43,6 +44,14 @@ import { resourceApi } from "@/lib/api/resource"; // 修改导入
 import FileIcon from "@/components/FileIcon";
 import { downloadFile } from "@/lib/utils";
 import { getStatusStyle } from "@/components/UserFileTaskStatus";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ResourceDetail() {
   const params = useParams();
@@ -53,6 +62,8 @@ export default function ResourceDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const { points, fetchPoints } = usePointsStore();
+  const [isPreviewAttempting, setIsPreviewAttempting] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
 
   // 加载资源详情
   useEffect(() => {
@@ -108,6 +119,58 @@ export default function ResourceDetail() {
       console.error(error);
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  // 用于检测文件类型的更详细函数
+  const getFileViewerType = (fileInfo?: FileInfo): string => {
+    if (!fileInfo) return 'none';
+    
+    // 根据文件扩展名识别
+    const extension = fileInfo.originalFilename.split('.').pop()?.toLowerCase();
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension || '')) return 'image';
+    if (['pdf'].includes(extension || '')) return 'pdf';
+    if (['mp4', 'webm', 'ogg', 'mov'].includes(extension || '')) return 'video';
+    if (['mp3', 'wav', 'ogg', 'flac'].includes(extension || '')) return 'audio';
+    if (['txt', 'csv', 'json', 'xml', 'md'].includes(extension || '')) return 'text';
+    
+    return 'none'; // 不可预览类型
+  };
+
+  // 判断文件是否可预览
+  const canPreviewInBrowser = (): boolean => {
+    const viewerType = getFileViewerType(resource?.fileInfo);
+    return viewerType !== 'none';
+  };
+  
+  // 处理预览功能
+  const handlePreview = async () => {
+    if (!resource || !resource.fileInfo) return;
+    
+    // 检查是否可以预览
+    if (!canPreviewInBrowser()) {
+      setShowPreviewDialog(true);
+      return;
+    }
+    
+    try {
+      setIsPreviewAttempting(true);
+      
+      // 使用与下载相同的API
+      const fileInfo = await resourceApi.downloadResource(resourceId);
+      
+      if (fileInfo && fileInfo.fileUrl) {
+        // 创建新窗口来预览文件
+        window.open(fileInfo.fileUrl, '_blank');
+      } else {
+        toast.error("无法预览此文件");
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "预览失败");
+      console.error(error);
+    } finally {
+      setIsPreviewAttempting(false);
     }
   };
 
@@ -255,7 +318,30 @@ export default function ResourceDetail() {
                   </div>
                 </div>
 
-                <div>
+                <div className="flex gap-2">
+                  {/* 添加预览按钮 */}
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "border-primary/30 hover:bg-primary/5",
+                      !canPreviewInBrowser() && "opacity-70 cursor-not-allowed hover:bg-transparent"
+                    )}
+                    onClick={canPreviewInBrowser() ? handlePreview : () => setShowPreviewDialog(true)}
+                    disabled={isPreviewAttempting || isDownloading}
+                  >
+                    {isPreviewAttempting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        加载中...
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-4 w-4 mr-2" />
+                        预览
+                      </>
+                    )}
+                  </Button>
+                  
                   {resource.isFree ? (
                     <Button
                       onClick={handleDownload}
@@ -486,6 +572,35 @@ export default function ResourceDetail() {
             )}
         </CardContent>
       </Card>
+
+      {/* 预览不支持对话框 */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>无法预览此类型文件</DialogTitle>
+            <DialogDescription>
+              当前文件类型不支持在浏览器中直接预览。您可以下载文件后使用对应的软件打开查看。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:justify-start">
+            <Button
+              variant="outline"
+              onClick={() => setShowPreviewDialog(false)}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={() => {
+                setShowPreviewDialog(false);
+                handleDownload();
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              直接下载
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
